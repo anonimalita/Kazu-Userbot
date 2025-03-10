@@ -55,9 +55,9 @@ async def _(ping):
     user = await ping.client.get_me()
     sleep(3)
     await ping.reply(
-        f"私 **ping :** `%sms`\n"
-        f"さ **uptime :** `{uptime}` \n"
-        f"ふ **owner :** [{user.first_name}](tg://user?id={user.id})" % (duration)
+        f"私 **ᴘɪɴɢ :** `%sms`\n"
+        f"さ **ᴜᴘᴛɪᴍᴇ :** `{uptime}` \n"
+        f"ふ **ᴏᴡɴᴇʀ :** [{user.first_name}](tg://user?id={user.id})" % (duration)
     )
 
 
@@ -98,17 +98,17 @@ async def _(ping):
 async def _(pong):
     await get_readable_time((time.time() - StartTime))
     start = datetime.now()
-    kopong = await edit_or_reply(pong, "**『𝗹𝗼𝗮𝗱𝗶𝗻𝗴』**")
-    await kopong.edit("**𝗽𝗹𝗲𝗮𝘀𝗲 𝘄𝗮𝗶𝘁**")
-    await kopong.edit("**𝗱𝗲𝘁𝗲𝗰𝘁 𝘆𝗼𝘂𝗿 𝗽𝗶𝗻𝗴**")
-    await kopong.edit("**𝘆𝗼𝘂𝗿 𝗽𝗶𝗻𝗴 𝗵𝗮𝘀 𝗯𝗲𝗲𝗻 𝗱𝗲𝘁𝗲𝗰𝘁𝗲𝗱**")
+    kopong = await edit_or_reply(pong, "『𝗹𝗼𝗮𝗱𝗶𝗻𝗴』")
+    await kopong.edit("𝗽𝗹𝗲𝗮𝘀𝗲 𝘄𝗮𝗶𝘁")
+    await kopong.edit("𝗱𝗲𝘁𝗲𝗰𝘁 𝘆𝗼𝘂𝗿 𝗽𝗶𝗻𝗴")
+    await kopong.edit("𝘆𝗼𝘂𝗿 𝗽𝗶𝗻𝗴 𝗵𝗮𝘀 𝗯𝗲𝗲𝗻 𝗱𝗲𝘁𝗲𝗰𝘁𝗲𝗱")
     end = datetime.now()
     duration = (end - start).microseconds / 1000
     user = await pong.client.get_me()
     await kopong.edit(
-        f"** 𖤐 𝗛𝗔𝗩𝗘 𝗬𝗢𝗨𝗥 𝗣𝗜𝗡𝗚** "
+        f" 𖤐 𝗛𝗔𝗩𝗘 𝗬𝗢𝗨𝗥 𝗣𝗜𝗡𝗚 "
         f"\n ★ 𝗬𝗼𝘂𝗿 𝗣𝗶𝗻𝗴 `%sms` \n"
-        f"**★ 𝗨𝗽𝘁𝗶𝗺𝗲** "
+        f"★ 𝗨𝗽𝘁𝗶𝗺𝗲 "
         f"\n ★ User - 𝗜𝗫𝗔𝗟𝗟『[{user.first_name}](tg://user?id={user.id})』 \n" % (duration)
     )
 
@@ -145,7 +145,7 @@ async def _(pong):
     await kping.edit("☠️")
     sleep(3)
     await kping.edit(
-        f"**IXALL TAMVAN!! 💀**\n**𝗬𝗼𝘂𝗿 𝗣𝗶𝗻𝗴** : %sms\n**𝗨𝗽𝘁𝗶𝗺𝗲** : {uptime}🕛" % (duration)
+        f"**IXALL TAMVAN!! 💀**\n𝗬𝗼𝘂𝗿 𝗣𝗶𝗻𝗴 : %sms\n𝗨𝗽𝘁𝗶𝗺𝗲 : {uptime}🕛" % (duration)
     )
 
 
