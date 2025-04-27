@@ -253,8 +253,6 @@ async def dlyspam(event):
         )
 
     await event.delete()
-        addgvar("spamwork", True)
-     await spam_function(event, reply, xnxx, sleeptimem, sleeptimet, DelaySpam=True)
     SPAM_STATUS[event.chat_id] = True
     await delay_spam_function(event, reply, xnxx, sleeptimem, sleeptimet, chat_id=event.chat_id)
 
