@@ -397,91 +397,94 @@ async def list_fwspam(event):
         text += f"• `{cid}`\n"
     await event.edit(text)
 
-# Initialize groups and lists
-group_list = defaultdict(list)  # group_id -> list of spam groups
-spam_lists = {}  # name -> list of messages to spam
-spam_tasks = {}  # store task references for spam
 
-# Add group to spam groups
-@ayiin_cmd(pattern=r'\.setgc (\S+)')
-async def set_group(event):
-    group = event.pattern_match.group(1)
-    group_list[group].append(event.chat.id)
-    await event.reply(f'Group {group} berhasil ditambahkan ke daftar sebar.')
+group_map = defaultdict(set)  # list_name -> set of group IDs
+spam_lists = defaultdict(list)  # list_name -> list of messages
+spam_tasks = {}  # list_name -> task
 
-# Remove group from spam groups
-@ayiin_cmd(pattern=r'\.delgc (\S+)')
-async def remove_group(event):
-    group = event.pattern_match.group(1)
-    if group in group_list and event.chat.id in group_list[group]:
-        group_list[group].remove(event.chat.id)
-        await event.reply(f'Group {group} berhasil dihapus dari daftar sebar.')
-    else:
-        await event.reply(f'Group {group} tidak ditemukan dalam daftar sebar.')
-
-# Add list to spam sets
-@ayiin_cmd(pattern=r'\.setlist (\S+) (.+)')
-async def set_spam_list(event):
+# Tambah grup ke list
+@ayiin_cmd(pattern="setgc (\S+)")
+async def set_gc(event):
     list_name = event.pattern_match.group(1)
-    text = event.pattern_match.group(2)
-    if list_name not in spam_lists:
-        spam_lists[list_name] = []
-    spam_lists[list_name].append(text)
-    await event.reply(f'List {list_name} dengan pesan "{text}" berhasil ditambahkan.')
+    group_map[list_name].add(event.chat_id)
+    await event.edit(f"✅ Grup ini ditambah ke list `{list_name}`.")
+    await event.client.send_message(BOTLOG_CHATID, f"✅ Grup {event.chat_id} ditambah ke list `{list_name}`.")
 
-# Remove list from spam sets
-@ayiin_cmd(pattern=r'\.dellist (\S+) (.+)')
-async def remove_spam_list(event):
+# Hapus grup dari list
+@ayiin_cmd(pattern="delgc (\S+)")
+async def del_gc(event):
     list_name = event.pattern_match.group(1)
-    text = event.pattern_match.group(2)
-    if list_name in spam_lists and text in spam_lists[list_name]:
-        spam_lists[list_name].remove(text)
-        await event.reply(f'List {list_name} dengan pesan "{text}" berhasil dihapus.')
+    if list_name in group_map and event.chat_id in group_map[list_name]:
+        group_map[list_name].remove(event.chat_id)
+        await event.edit(f"❌ Grup ini dihapus dari list `{list_name}`.")
+        await event.client.send_message(BOTLOG_CHATID, f"❌ Grup {event.chat_id} dihapus dari list `{list_name}`.")
     else:
-        await event.reply(f'Pesan tidak ditemukan dalam list {list_name}.')
+        await event.edit(f"⚠️ Grup ini tidak ada di list `{list_name}`.")
 
-# Start the spam from a list to a group with delay
-@ayiin_cmd(pattern=r'\.spamset (\d+) (\S+)')
-async def start_spam_set(event):
+# Tambah pesan ke list
+@ayiin_cmd(pattern="setlist (\S+) (.+)")
+async def set_list(event):
+    list_name = event.pattern_match.group(1)
+    message = event.pattern_match.group(2)
+    spam_lists[list_name].append(message)
+    await event.edit(f"✅ Pesan ditambah ke list `{list_name}`.")
+    await event.client.send_message(BOTLOG_CHATID, f"➕ Pesan ditambah ke list `{list_name}`:\n`{message}`")
+
+# Hapus pesan dari list
+@ayiin_cmd(pattern="dellist (\S+) (.+)")
+async def del_list(event):
+    list_name = event.pattern_match.group(1)
+    message = event.pattern_match.group(2)
+    if message in spam_lists[list_name]:
+        spam_lists[list_name].remove(message)
+        await event.edit(f"❌ Pesan dihapus dari list `{list_name}`.")
+        await event.client.send_message(BOTLOG_CHATID, f"❌ Pesan dihapus dari list `{list_name}`:\n`{message}`")
+    else:
+        await event.edit(f"⚠️ Pesan tidak ditemukan di list `{list_name}`.")
+
+# Mulai spam ke semua grup dalam list
+@ayiin_cmd(pattern="spamset (\d+) (\S+)")
+async def start_spam(event):
     delay = int(event.pattern_match.group(1))
     list_name = event.pattern_match.group(2)
-    
-    if list_name not in spam_lists:
-        await event.reply(f'List {list_name} tidak ditemukan.')
-        return
 
-    if event.chat.id not in group_list:
-        await event.reply(f'Anda belum menambahkan grup ini ke daftar sebar.')
-        return
+    if list_name not in spam_lists or not spam_lists[list_name]:
+        return await event.edit(f"⚠️ List `{list_name}` kosong atau tidak ditemukan.")
+    
+    if not group_map[list_name]:
+        return await event.edit(f"⚠️ Tidak ada grup yang terdaftar di list `{list_name}`.")
 
     async def spam_task():
-        while event.chat.id in group_list.get(list_name, []):
-            for text in spam_lists[list_name]:
-                await event.client.send_message(event.chat.id, text)
-                await asyncio.sleep(delay)
+        while True:
+            for group_id in group_map[list_name]:
+                for msg in spam_lists[list_name]:
+                    try:
+                        await event.client.send_message(group_id, msg)
+                        await asyncio.sleep(delay)
+                    except Exception as e:
+                        await event.client.send_message(BOTLOG_CHATID, f"⚠️ Gagal kirim ke {group_id}: {e}")
+            await asyncio.sleep(delay)
 
-    spam_tasks[event.chat.id] = asyncio.create_task(spam_task())
-    await event.reply(f'Started spam dengan delay {delay}s untuk list {list_name}.')
+    if list_name in spam_tasks:
+        return await event.edit("⚠️ Spam sudah berjalan untuk list ini.")
 
-# Stop spam from a list to a group
-@ayiin_cmd(pattern=r'\.stoplist (\S+)')
-async def stop_spam_set(event):
-    if event.chat.id in spam_tasks:
-        spam_tasks[event.chat.id].cancel()
-        del spam_tasks[event.chat.id]
-        await event.reply('Spam berhasil dihentikan.')
-    else:
-        await event.reply('Tidak ada spam yang berjalan untuk grup ini.')
+    spam_tasks[list_name] = asyncio.create_task(spam_task())
+    await event.edit(f"▶️ Spam ke list `{list_name}` dimulai setiap {delay} detik.")
+    await event.client.send_message(BOTLOG_CHATID, f"▶️ Spam dimulai ke list `{list_name}` (delay {delay}s)")
 
-# View ongoing spam tasks
-@ayiin_cmd(pattern=r'\.viewspam')
-async def view_spam(event):
+@ayiin_cmd(pattern="vspam$")
+async def cek_spam(event):
     if not spam_tasks:
-        await event.reply('Tidak ada spam yang berjalan saat ini.')
+        await event.edit("🔍 Tidak ada spam list yang sedang berjalan.")
         return
 
-    ongoing_spams = "\n".join([f'Group ID: {group_id}, Spam list: {list_name}' for group_id, task in spam_tasks.items()])
-    await event.reply(f'Ongoing spam tasks:\n{ongoing_spams}')
+    teks = "**📊 Daftar spam yang aktif:**\n"
+    for list_name in spam_tasks:
+        group_ids = list(group_map[list_name])
+        teks += f"\n📂 **{list_name}**\n"
+        for gid in group_ids:
+            teks += f"├ Group ID: `{gid}`\n"
+    await event.edit(teks)
 
 
 CMD_HELP.update(
