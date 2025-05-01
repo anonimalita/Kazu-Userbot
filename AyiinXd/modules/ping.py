@@ -55,9 +55,10 @@ async def _(ping):
     user = await ping.client.get_me()
     sleep(3)
     await ping.reply(
-        f"私 **ᴘɪɴɢ :** `%sms`\n"
-        f"さ **ᴜᴘᴛɪᴍᴇ :** `{uptime}` \n"
-        f"ふ **ᴏᴡɴᴇʀ :** [{user.first_name}](tg://user?id={user.id})" % (duration)
+        f"⎋ **Active!**"
+        f"├ **sᴘᴇᴇᴅʏ :** `%sms`\n"
+        f"├ **ᴜᴘᴛɪᴍᴇ :** `{uptime}` \n"
+        f"├ **ᴏᴡɴᴇʀ :** [{user.first_name}](tg://user?id={user.id})" % (duration)
     )
 
 
@@ -120,7 +121,7 @@ async def _(pong):
 async def _(pong):
     uptime = await get_readable_time((time.time() - StartTime))
     start = datetime.now()
-    kping = await edit_or_reply(pong, "8🥶===D")
+    kping = await edit_or_reply(pong, "8🤑===D")
     await kping.edit("8=🥵==D")
     await kping.edit("8==🤯=D")
     await kping.edit("8===☠️D")
