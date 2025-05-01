@@ -422,7 +422,6 @@ CMD_HELP.update(
         \n  »  **Kegunaan :** Stop spam forward dalam satu gc.\
         \n\n  »  **Perintah :** `{cmd}listfw`\
         \n  »  **Kegunaan :** Melihat daftar spam forward yang sedang aktif.\
-        \n\n  •  **NOTE :** Spam dengan Risiko Anda sendiri.
-    "
+        \n\n  •  **NOTE :** Spam dengan Risiko Anda sendiri."
     }
 )
