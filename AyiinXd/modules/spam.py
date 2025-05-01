@@ -16,7 +16,7 @@ from AyiinXd.modules.sql_helper.globals import addgvar, gvarstatus
 from AyiinXd.ayiin import ayiin_cmd, eod, eor
 from AyiinXd.ayiin.tools import media_type
 from Stringyins import get_string
-
+from collections import defaultdict
 
 async def unsavegif(event, spammer):
     try:
