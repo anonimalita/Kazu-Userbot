@@ -17,6 +17,8 @@ from AyiinXd.ayiin import ayiin_cmd, eod, eor
 from AyiinXd.ayiin.tools import media_type
 from Stringyins import get_string
 from collections import defaultdict
+from AyiinXd.events import register
+from userbot.utils import edit_or_reply, ayiin_cmd
 
 async def unsavegif(event, spammer):
     try:
