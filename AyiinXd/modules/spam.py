@@ -19,17 +19,6 @@ from Stringyins import get_string
 from collections import defaultdict
 from AyiinXd.events import register
 
-from telethon.events import NewMessage
-
-def ayiin_cmd(**args):
-    pattern = args.get("pattern")
-    return NewMessage(outgoing=True, pattern=f"^.{pattern}")
-
-async def edit_or_reply(event, text):
-    if event.out:
-        return await event.edit(text)
-    return await event.reply(text)
-
 
 async def unsavegif(event, spammer):
     try:
