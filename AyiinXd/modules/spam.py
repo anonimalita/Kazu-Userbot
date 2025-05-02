@@ -383,18 +383,16 @@ async def list_fwspam(event):
     await event.edit(text)
     
 
-from telethon import events
-
-@ayiin_cmd(pattern="addgc (.+)", outgoing=True)
-async def add_gc(event):
-    gc_username = event.pattern_match.group(1)
-    
-    # Logika untuk menambah grup dengan username atau link yang diberikan
+@ayiin_cmd(pattern=r"^.setgc (\S+) (\S+)")
+async def set_gc(event):
+    list_name = event.pattern_match.group(1)
+    target = event.pattern_match.group(2)
     try:
-        await event.respond(f"Menambahkan {gc_username} ke dalam daftar grup.")
-        # Di sini bisa menambah grup ke dalam database atau proses lainnya sesuai dengan logika bot kamu
+        entity = await event.client.get_entity(target)
+        group_list[list_name].append(entity.id)
+        await event.edit(f"✅ Grup **{entity.title}** (`{entity.id}`) berhasil ditambahkan ke list `{list_name}`.")
     except Exception as e:
-        await event.respond(f"Terjadi kesalahan: {str(e)}")
+        await event.edit(f"❌ Gagal: {e}")
 
 # Perhatikan bahwa saya menghapus bagian penggunaan `MessageEdited` karena itu tidak perlu di sini.
 
