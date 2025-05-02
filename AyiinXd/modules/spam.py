@@ -17,23 +17,6 @@ from AyiinXd.ayiin import ayiin_cmd, eod, eor
 from AyiinXd.ayiin.tools import media_type
 from Stringyins import get_string
 from collections import defaultdict
-from AyiinXd.events import register
-
-
-async def unsavegif(event, spammer):
-    try:
-        await event.client(
-            functions.messages.SaveGifRequest(
-                id=types.InputDocument(
-                    id=spammer.media.document.id,
-                    access_hash=spammer.media.document.access_hash,
-                    file_reference=spammer.media.document.file_reference,
-                ),
-                unsave=True,
-            )
-        )
-    except Exception as e:
-        LOGS.info(f"{e}")
 
 
 async def spam_function(event, spammer, xnxx, sleeptimem, sleeptimet, DelaySpam=False):
