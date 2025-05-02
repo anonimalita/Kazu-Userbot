@@ -398,144 +398,297 @@ async def list_fwspam(event):
     await event.edit(text)
     
 
-# Inisialisasi dengan defaultdict
-group_list = defaultdict(list)  # group_id -> list of spam groups
-spam_lists = defaultdict(list)  # name -> list of messages to spam
-forward_lists = defaultdict(list)  # name -> list of forward links
-spam_tasks = {}  # store task references for spam
+# Penyimpanan data
+group_list = defaultdict(list)
+spam_lists = defaultdict(list)
+spam_fw_lists = {}
+spam_tasks = {}
+fw_tasks = {}
 
-# Add group to spam groups
+# Tambah grup ke list
 @ayiin_cmd(pattern="setgc (\S+) (\S+)")
-async def set_group(event):
+async def set_gc(event):
     list_name = event.pattern_match.group(1)
-    group_id = event.pattern_match.group(2)
-    
-    group_list[list_name].append(group_id)
-    await event.reply(f"Group dengan ID/Username `{group_id}` berhasil ditambahkan ke list `{list_name}`.")
+    target = event.pattern_match.group(2)
+    try:
+        entity = await event.client.get_entity(target)
+        group_list[list_name].append(entity.id)
+        await event.edit(f"✅ Grup **{entity.title}** (`{entity.id}`) berhasil ditambahkan ke list `{list_name}`.")
+    except Exception as e:
+        await event.edit(f"❌ Gagal: {e}")
 
-# Remove group from spam groups
+# Hapus grup dari list
 @ayiin_cmd(pattern="delgc (\S+) (\S+)")
-async def remove_group(event):
+async def del_gc(event):
     list_name = event.pattern_match.group(1)
-    group_id = event.pattern_match.group(2)
+    target = event.pattern_match.group(2)
+    try:
+        entity = await event.client.get_entity(target)
+        if entity.id in group_list.get(list_name, []):
+            group_list[list_name].remove(entity.id)
+            await event.edit(f"✅ Grup **{entity.title}** berhasil dihapus dari list `{list_name}`.")
+        else:
+            await event.edit("❌ Grup tidak ditemukan di list.")
+    except Exception as e:
+        await event.edit(f"❌ Gagal: {e}")
 
-    if group_id in group_list[list_name]:
-        group_list[list_name].remove(group_id)
-        await event.reply(f"Group `{group_id}` berhasil dihapus dari list `{list_name}`.")
-    else:
-        await event.reply(f"Group `{group_id}` tidak ditemukan dalam list `{list_name}`.")
-
-# Add list to spam sets
-@ayiin_cmd(pattern="setlist (\S+) (.+)")
-async def set_spam_list(event):
+# Tambah teks ke list
+@ayiin_cmd(pattern="setlist (\S+)\n([\s\S]+)")
+async def set_list(event):
     list_name = event.pattern_match.group(1)
     text = event.pattern_match.group(2)
-    
     spam_lists[list_name].append(text)
-    await event.reply(f"Pesan `{text}` berhasil ditambahkan ke list `{list_name}`.")
+    await event.edit(f"✅ Pesan berhasil ditambahkan ke list `{list_name}`.")
 
-# Remove list from spam sets
+# Hapus teks dari list
 @ayiin_cmd(pattern="dellist (\S+) (.+)")
-async def remove_spam_list(event):
+async def del_list(event):
     list_name = event.pattern_match.group(1)
     text = event.pattern_match.group(2)
-
-    if text in spam_lists[list_name]:
+    if text in spam_lists.get(list_name, []):
         spam_lists[list_name].remove(text)
-        await event.reply(f"Pesan `{text}` berhasil dihapus dari list `{list_name}`.")
+        await event.edit(f"✅ Pesan dihapus dari list `{list_name}`.")
     else:
-        await event.reply(f"Pesan `{text}` tidak ditemukan dalam list `{list_name}`.")
+        await event.edit("❌ Pesan tidak ditemukan dalam list.")
 
-# Add forward list to spam sets
+# Tambah list forward
 @ayiin_cmd(pattern="setlistfw (\S+) (\S+)")
-async def set_forward_list(event):
-    list_name = event.pattern_match.group(1)
-    forward_link = event.pattern_match.group(2)
+async def set_list_fw(event):
+    name, link = event.pattern_match.group(1), event.pattern_match.group(2)
+    spam_fw_lists[name] = link
+    await event.edit(f"✅ Link `{link}` berhasil ditambahkan ke list forward `{name}`.")
 
-    forward_lists[list_name].append(forward_link)
-    await event.reply(f"Link `{forward_link}` berhasil ditambahkan ke forward list `{list_name}`.")
-
-# Remove forward list
-@ayiin_cmd(pattern="dellistfw (\S+) (\S+)")
-async def remove_forward_list(event):
-    list_name = event.pattern_match.group(1)
-    forward_link = event.pattern_match.group(2)
-
-    if forward_link in forward_lists[list_name]:
-        forward_lists[list_name].remove(forward_link)
-        await event.reply(f"Link `{forward_link}` berhasil dihapus dari forward list `{list_name}`.")
+# Hapus list forward
+@ayiin_cmd(pattern="dellistfw (\S+)")
+async def del_list_fw(event):
+    name = event.pattern_match.group(1)
+    if name in spam_fw_lists:
+        del spam_fw_lists[name]
+        await event.edit(f"✅ List forward `{name}` berhasil dihapus.")
     else:
-        await event.reply(f"Link `{forward_link}` tidak ditemukan dalam forward list `{list_name}`.")
+        await event.edit("❌ List forward tidak ditemukan.")
 
-# Start the spam from a list to a group with delay
+# Spam teks ke banyak grup
 @ayiin_cmd(pattern="spamset (\d+) (\S+)")
-async def start_spam_set(event):
+async def spam_set(event):
     delay = int(event.pattern_match.group(1))
     list_name = event.pattern_match.group(2)
-    
-    if list_name not in spam_lists:
-        await event.reply(f"List `{list_name}` tidak ditemukan.")
-        return
+    texts = spam_lists.get(list_name)
+    targets = group_list.get(list_name)
+    if not texts or not targets:
+        return await event.edit("❌ List teks atau grup tidak ditemukan.")
+    await event.edit(f"▶️ Mulai spam teks ke list `{list_name}`.")
 
-    if event.chat.id not in group_list:
-        await event.reply(f"Grup ini belum terdaftar dalam daftar sebar.")
-        return
+    async def spam_loop():
+        while True:
+            for chat_id in targets:
+                for text in texts:
+                    await event.client.send_message(chat_id, text, parse_mode='html')
+                    await asyncio.sleep(delay)
+    spam_tasks[list_name] = asyncio.create_task(spam_loop())
 
-    async def spam_task():
-        while event.chat.id in group_list.get(list_name, []):
-            for text in spam_lists[list_name]:
-                await event.client.send_message(event.chat.id, text)
-                await asyncio.sleep(delay)
+# Spam forward ke banyak grup
+@ayiin_cmd(pattern="spamfw (\d+) (\S+)")
+async def spam_fw(event):
+    delay = int(event.pattern_match.group(1))
+    list_name = event.pattern_match.group(2)
+    link = spam_fw_lists.get(list_name)
+    targets = group_list.get(list_name)
+    if not link or not targets:
+        return await event.edit("❌ List forward atau grup tidak ditemukan.")
+    await event.edit(f"▶️ Mulai forward dari `{link}` ke list `{list_name}`.")
 
-    spam_tasks[event.chat.id] = asyncio.create_task(spam_task())
-    await event.reply(f"Started spam dengan delay {delay}s untuk list `{list_name}`.")
+    async def fw_loop():
+        while True:
+            for chat_id in targets:
+                try:
+                    await event.client.forward_messages(chat_id, link, from_peer=link)
+                    await asyncio.sleep(delay)
+                except Exception:
+                    continue
+    fw_tasks[list_name] = asyncio.create_task(fw_loop())
 
-# Stop spam from a list to a group
-@ayiin_cmd(pattern="stoplist (\S+)")
-async def stop_spam_set(event):
-    if event.chat.id in spam_tasks:
-        spam_tasks[event.chat.id].cancel()
-        del spam_tasks[event.chat.id]
-        await event.reply(f"Spam untuk grup `{event.chat.id}` berhasil dihentikan.")
+# Stop spam teks
+@ayiin_cmd(pattern="stopset (\S+)")
+async def stop_set(event):
+    name = event.pattern_match.group(1)
+    task = spam_tasks.get(name)
+    if task:
+        task.cancel()
+        del spam_tasks[name]
+        await event.edit(f"✅ Spam teks `{name}` dihentikan.")
     else:
-        await event.reply("Tidak ada spam yang berjalan untuk grup ini.")
+        await event.edit("❌ Tidak ada spam teks berjalan untuk list itu.")
 
-# View ongoing spam tasks
-@ayiin_cmd(pattern="viewspam$")
+# Stop spam forward
+@ayiin_cmd(pattern="sstopfw (\S+)")
+async def stop_fw(event):
+    name = event.pattern_match.group(1)
+    task = fw_tasks.get(name)
+    if task:
+        task.cancel()
+        del fw_tasks[name]
+        await event.edit(f"✅ Spam forward `{name}` dihentikan.")
+    else:
+        await event.edit("❌ Tidak ada spam forward berjalan untuk list itu.")
+
+# Lihat semua list berjalan
+@ayiin_cmd(pattern=r"spamcek$")
+async def spam_cek(event):
+    msg = "**📡 Daftar Spam Aktif:**\n"
+    if spam_tasks:
+        msg += "\n**📝 Spam Teks:**"
+        for name in spam_tasks:
+            msg += f"\n • `{name}`"
+    else:
+        msg += "\n❌ Tidak ada spam teks aktif."
+
+    if fw_tasks:
+        msg += "\n\n**🔁 Spam Forward:**"
+        for name in fw_tasks:
+            msg += f"\n • `{name}`"
+    else:
+        msg += "\n\n❌ Tidak ada spam forward aktif."
+
+    await event.edit(msg)
+
+# Vspam contoh
+@ayiin_cmd(pattern="vspam (\d+) (.+)")
+async def vspam_handler(event):
+    count = int(event.pattern_match.group(1))
+    text = event.pattern_match.group(2)
+    for _ in range(count):
+        await event.respond(text)
+
+# Cek semua list, forward, grup
+@ayiin_cmd(pattern="listall$")
+async def list_all_data(event):
+    if not spam_lists and not spam_fw_lists and not group_list:
+        return await event.edit("❌ Belum ada data tersimpan (list teks, forward, atau grup).")
+    
+    msg = "**📦 Daftar Semua List Tersimpan:**\n"
+
+    # List Teks
+    if spam_lists:
+        msg += "\n**📄 List Teks:**"
+        for name, teks in spam_lists.items():
+            msg += f"\n  • `{name}` ({len(teks)} item)"
+    else:
+        msg += "\n\nTidak ada list teks."
+
+    # List Forward
+    if spam_fw_lists:
+        msg += "\n\n**🔁 List Forward:**"
+        for name, link in spam_fw_lists.items():
+            msg += f"\n  • `{name}` → {link}"
+    else:
+        msg += "\n\nTidak ada list forward."
+
+    # List Grup
+    if group_list:
+        msg += "\n\n**👥 List Grup per List:**"
+        for listname, gcs in group_list.items():
+            msg += f"\n  • `{listname}`:"
+            for gc in gcs:
+                try:
+                    chat = await event.client.get_entity(gc)
+                    name = chat.title or chat.first_name
+                    username = f"@{chat.username}" if getattr(chat, 'username', None) else f"`{gc}`"
+                    msg += f"\n     └ {name} ({username})"
+                except Exception:
+                    msg += f"\n     └ `ID: {gc}` (gagal ambil info)"
+    else:
+        msg += "\n\nTidak ada grup yang tersimpan."
+
+    await event.edit(msg)
+
+@man_cmd(pattern="vwspam$")
 async def view_spam(event):
-    if not spam_tasks:
-        await event.reply('Tidak ada spam yang berjalan saat ini.')
-        return
+    teks = "**• SPAM YANG SEDANG BERJALAN •**\n"
 
-    ongoing_spams = "\n".join([f'Group ID: {group_id}, Spam list: {list_name}' for group_id, task in spam_tasks.items()])
-    await event.reply(f'Ongoing spam tasks:\n{ongoing_spams}')
+    # View spamset teks
+    if aktif_spamset:
+        teks += "\n\n**Spamset (Teks):**"
+        for listname, data in aktif_spamset.items():
+            teks += f"\n• **List:** `{listname}`"
+            for chat_id in data.get("chats", []):
+                try:
+                    chat = await event.client.get_entity(chat_id)
+                    name = f"[{chat.title}](https://t.me/{chat.username})" if getattr(chat, "username", None) else f"`{chat.title}`"
+                except Exception:
+                    name = f"`{chat_id}`"
+                teks += f"\n    - {name}"
+    else:
+        teks += "\n\n**Spamset (Teks):** Tidak ada."
 
+    # View spamfw forward
+    if aktif_spamfw:
+        teks += "\n\n**Spamfw (Forward):**"
+        for listname, data in aktif_spamfw.items():
+            teks += f"\n• **List:** `{listname}`"
+            for chat_id in data.get("chats", []):
+                try:
+                    chat = await event.client.get_entity(chat_id)
+                    name = f"[{chat.title}](https://t.me/{chat.username})" if getattr(chat, "username", None) else f"`{chat.title}`"
+                except Exception:
+                    name = f"`{chat_id}`"
+                teks += f"\n    - {name}"
+    else:
+        teks += "\n\n**Spamfw (Forward):** Tidak ada."
 
+    await event.edit(teks, link_preview=False)
+    
 CMD_HELP.update(
     {
         "spam": f"**Plugin :** `spam`\
-        \n\n  »  **Perintah :** `{cmd}spam` <jumlah spam> <text>\
-        \n  »  **Kegunaan :** Membanjiri teks dalam obrolan!!\
-        \n\n  »  **Perintah :** `{cmd}cspam` <text>\
-        \n  »  **Kegunaan :** Spam surat teks dengan huruf.\
-        \n\n  »  **Perintah :** `{cmd}sspam` <reply sticker>\
-        \n  »  **Kegunaan :** Spam sticker dari Seluruh isi Sticker Pack.\
-        \n\n  »  **Perintah :** `{cmd}wspam` <text>\
-        \n  »  **Kegunaan :** Spam kata teks demi kata.\
-        \n\n  »  **Perintah :** `{cmd}picspam` <jumlah spam> <link image/gif>\
-        \n  »  **Kegunaan :** Spam Foto Seolah-olah spam teks tidak cukup !!\
-        \n\n  »  **Perintah :** `{cmd}delayspam` <detik> <jumlah spam> <text>\
-        \n  »  **Kegunaan :** Spam surat teks dengan jeda.\
-        \n\n  »  **Perintah :** `{cmd}stopdspam`\
-        \n  »  **Kegunaan :** Memberhentikan spam delay dalam satu gc.\
-        \n\n  »  **Perintah :** `{cmd}listdspam`\
-        \n  »  **Kegunaan :** Melihat daftar spam delay yang aktif.\
-        \n\n  »  **Perintah :** `{cmd}dspamfw` <detik> <jumlah spam> <link yang ingin di forward>\
-        \n  »  **Kegunaan :** Spam forward dari channel.\
-        \n\n  »  **Perintah :** `{cmd}stopfw`\
-        \n  »  **Kegunaan :** Stop spam forward dalam satu gc.\
-        \n\n  »  **Perintah :** `{cmd}listfw`\
-        \n  »  **Kegunaan :** Melihat daftar spam forward yang sedang aktif.\
-        \n\n  •  **NOTE :** Spam dengan Risiko Anda sendiri."
+\n\n  »  **Perintah :** `{cmd}spam` <jumlah> <teks>\
+\n  »  **Kegunaan :** Membanjiri chat dengan teks berulang sebanyak jumlah yang ditentukan.\
+\n\n  »  **Perintah :** `{cmd}cspam` <teks>\
+\n  »  **Kegunaan :** Spam karakter satu per satu dari teks yang diberikan.\
+\n\n  »  **Perintah :** `{cmd}sspam` <balas stiker>\
+\n  »  **Kegunaan :** Spam semua stiker dari sticker pack yang dibalas.\
+\n\n  »  **Perintah :** `{cmd}wspam` <teks>\
+\n  »  **Kegunaan :** Spam kata per kata dari teks.\
+\n\n  »  **Perintah :** `{cmd}picspam` <jumlah> <link_gambar>\
+\n  »  **Kegunaan :** Spam gambar/foto/gif dari link yang diberikan.\
+\n\n  »  **Perintah :** `{cmd}delayspam` <delay> <jumlah> <teks>\
+\n  »  **Kegunaan :** Spam teks dengan jeda antar pesan.\
+\n\n  »  **Perintah :** `{cmd}stopdspam`\
+\n  »  **Kegunaan :** Menghentikan spam delay di grup saat ini.\
+\n\n  »  **Perintah :** `{cmd}listdspam`\
+\n  »  **Kegunaan :** Menampilkan semua spam delay yang aktif.\
+\n\n  »  **Perintah :** `{cmd}dspamfw` <delay> <jumlah> <link_post_channel>\
+\n  »  **Kegunaan :** Spam konten dari post channel berkali-kali dengan delay.\
+\n\n  »  **Perintah :** `{cmd}stopfw`\
+\n  »  **Kegunaan :** Menghentikan spam forward di grup saat ini.\
+\n\n  »  **Perintah :** `{cmd}listfw`\
+\n  »  **Kegunaan :** Menampilkan semua spam forward yang sedang aktif.\
+\n\n  »  **Perintah :** `{cmd}vspam` <jumlah> <teks>\
+\n  »  **Kegunaan :** Spam teks biasa sebanyak jumlah yang ditentukan.\
+\n\n  »  **Perintah :** `{cmd}setlist` <nama_list> <teks>\
+\n  »  **Kegunaan :** Menyimpan teks spam (hyperlink atau teks kebawah) ke dalam list.\
+\n\n  »  **Perintah :** `{cmd}dellist` <nama_list> <isi>\
+\n  »  **Kegunaan :** Menghapus isi tertentu dari list spam.\
+\n\n  »  **Perintah :** `{cmd}setlistfw` <nama_list> <link_post_channel>\
+\n  »  **Kegunaan :** Menyimpan list spam forward berdasarkan post dari channel.\
+\n\n  »  **Perintah :** `{cmd}dellistfw` <nama_list>\
+\n  »  **Kegunaan :** Menghapus list forward berdasarkan nama list.\
+\n\n  »  **Perintah :** `{cmd}setgc` <nama_list> <@usergc/ID>\
+\n  »  **Kegunaan :** Menambahkan grup ke list tujuan spam.\
+\n\n  »  **Perintah :** `{cmd}delgc` <nama_list> <@usergc/ID>\
+\n  »  **Kegunaan :** Menghapus grup dari list tujuan spam.\
+\n\n  »  **Perintah :** `{cmd}spamset` <delay> <nama_list>\
+\n  »  **Kegunaan :** Menyebar isi list teks ke grup-grup yang sudah diset.\
+\n\n  »  **Perintah :** `{cmd}spamfw` <delay> <nama_list>\
+\n  »  **Kegunaan :** Menyebar post channel dari list forward ke grup-grup yang diset.\
+\n\n  »  **Perintah :** `{cmd}stopset`\
+\n  »  **Kegunaan :** Menghentikan proses spamset yang sedang berjalan.\
+\n\n  »  **Perintah :** `{cmd}sstopfw`\
+\n  »  **Kegunaan :** Menghentikan proses spamfw yang sedang berjalan.\
+\n\n  »  **Perintah :** `{cmd}spamcek`\
+\n  »  **Kegunaan :** Menampilkan semua list teks, list forward, dan list grup yang tersimpan.\
+\n\n  »  **Perintah :** `{cmd}vwspam`\
+\n  »  **Kegunaan :** Melihat semua spamset/spamfw yang aktif dan sedang berjalan.\
+\n\n  •  **NOTE :** Spam dengan Risiko Anda sendiri. Jangan salah gunakan!"
     }
 )
