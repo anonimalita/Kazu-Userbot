@@ -383,115 +383,198 @@ async def list_fwspam(event):
     await event.edit(text)
     
 
-group_list = defaultdict(list) spam_lists = defaultdict(list) spam_fw_lists = {} spam_tasks = {} fw_tasks = {} aktif_spamset = {} aktif_spamfw = {}
+# Fitur untuk menambahkan grup baru ke target spam (dengan username)
+@ayiin_cmd(pattern="addgc (.+)", outgoing=True))
+async def add_gc(event):
+    if event.chat_id in BLACKLIST_CHAT:
+        return await event.edit("Dilarang di sini.")
 
-Tambah grup ke list
+    # Ambil semua username grup dari input
+    group_usernames = event.pattern_match.group(1).split()
 
-@ayiin_cmd(pattern="setgc (\S+) (\S+)") async def set_gc(event): list_name = event.pattern_match.group(1) target = event.pattern_match.group(2) try: entity = await event.client.get_entity(target) group_list[list_name].append(entity.id) await event.edit(f"✅ Grup {entity.title} ({entity.id}) berhasil ditambahkan ke list {list_name}.") except Exception as e: await event.edit(f"❌ Gagal: {e}")
+    added_groups = []
+    for username in group_usernames:
+        try:
+            # Cek apakah grup sudah ada dalam database berdasarkan username
+            group = await client.get_entity(username)
+            chat_id = group.id
 
-Hapus grup dari list
+            # Cek apakah grup sudah ada dalam list target
+            cursor.execute("SELECT chat_id FROM spam_targets WHERE chat_id = ?", (chat_id,))
+            existing = cursor.fetchone()
 
-@ayiin_cmd(pattern="delgc (\S+) (\S+)") async def del_gc(event): list_name = event.pattern_match.group(1) target = event.pattern_match.group(2) try: entity = await event.client.get_entity(target) if entity.id in group_list.get(list_name, []): group_list[list_name].remove(entity.id) await event.edit(f"✅ Grup {entity.title} berhasil dihapus dari list {list_name}.") else: await event.edit("❌ Grup tidak ditemukan di list.") except Exception as e: await event.edit(f"❌ Gagal: {e}")
-
-Tambah teks ke list
-
-@ayiin_cmd(pattern="setlist (\S+)\n([\s\S]+)") async def set_list(event): list_name = event.pattern_match.group(1) text = event.pattern_match.group(2) spam_lists[list_name].append(text) await event.edit(f"✅ Pesan berhasil ditambahkan ke list {list_name}.")
-
-Hapus teks dari list
-
-@ayiin_cmd(pattern="dellist (\S+) (.+)") async def del_list(event): list_name = event.pattern_match.group(1) text = event.pattern_match.group(2) if text in spam_lists.get(list_name, []): spam_lists[list_name].remove(text) await event.edit(f"✅ Pesan dihapus dari list {list_name}.") else: await event.edit("❌ Pesan tidak ditemukan dalam list.")
-
-Tambah list forward
-
-@ayiin_cmd(pattern="setlistfw (\S+) (\S+)") async def set_list_fw(event): name, link = event.pattern_match.group(1), event.pattern_match.group(2) spam_fw_lists[name] = link await event.edit(f"✅ Link {link} berhasil ditambahkan ke list forward {name}.")
-
-Hapus list forward
-
-@ayiin_cmd(pattern="dellistfw (\S+)") async def del_list_fw(event): name = event.pattern_match.group(1) if name in spam_fw_lists: del spam_fw_lists[name] await event.edit(f"✅ List forward {name} berhasil dihapus.") else: await event.edit("❌ List forward tidak ditemukan.")
-
-Spam teks ke banyak grup
-
-@ayiin_cmd(pattern="spamset (\d+) (\S+)") async def spam_set(event): delay = int(event.pattern_match.group(1)) list_name = event.pattern_match.group(2) texts = spam_lists.get(list_name) targets = group_list.get(list_name) if not texts or not targets: return await event.edit("❌ List teks atau grup tidak ditemukan.") await event.edit(f"▶️ Mulai spam teks ke list {list_name}.") aktif_spamset[list_name] = {"chats": targets}
-
-async def spam_loop():
-    while True:
-        for chat_id in targets:
-            for text in texts:
-                await event.client.send_message(chat_id, text, parse_mode='html')
-                await asyncio.sleep(delay)
-spam_tasks[list_name] = asyncio.create_task(spam_loop())
-
-Spam forward ke banyak grup
-
-@ayiin_cmd(pattern="spamfw (\d+) (\S+)") async def spam_fw(event): delay = int(event.pattern_match.group(1)) list_name = event.pattern_match.group(2) link = spam_fw_lists.get(list_name) targets = group_list.get(list_name) if not link or not targets: return await event.edit("❌ List forward atau grup tidak ditemukan.") await event.edit(f"▶️ Mulai forward dari {link} ke list {list_name}.") aktif_spamfw[list_name] = {"chats": targets}
-
-async def fw_loop():
-    while True:
-        for chat_id in targets:
-            try:
-                await event.client.forward_messages(chat_id, link, from_peer=link)
-                await asyncio.sleep(delay)
-            except Exception:
+            if existing:
+                added_groups.append(f"Grup `{username}` sudah ada dalam list target spam.")
                 continue
-fw_tasks[list_name] = asyncio.create_task(fw_loop())
 
-Stop spam teks
+            # Menambahkan grup ke dalam database
+            cursor.execute("INSERT INTO spam_targets (chat_id) VALUES (?)", (chat_id,))
+            conn.commit()
+            added_groups.append(f"Grup `{username}` berhasil ditambahkan ke target spam.")
 
-@ayiin_cmd(pattern="stopset (\S+)") async def stop_set(event): name = event.pattern_match.group(1) task = spam_tasks.get(name) if task: task.cancel() del spam_tasks[name] aktif_spamset.pop(name, None) await event.edit(f"✅ Spam teks {name} dihentikan.") else: await event.edit("❌ Tidak ada spam teks berjalan untuk list itu.")
-
-Stop spam forward
-
-@ayiin_cmd(pattern="sstopfw (\S+)") async def stop_fw(event): name = event.pattern_match.group(1) task = fw_tasks.get(name) if task: task.cancel() del fw_tasks[name] aktif_spamfw.pop(name, None) await event.edit(f"✅ Spam forward {name} dihentikan.") else: await event.edit("❌ Tidak ada spam forward berjalan untuk list itu.")
-
-Lihat semua spam yang aktif
-
-@ayiin_cmd(pattern="spamcek$") async def spam_cek(event): msg = "\uD83D\uDCF1 Spam Aktif:\n" if spam_tasks: msg += "\nSpam Teks:" for name in spam_tasks: msg += f"\n • {name}" else: msg += "\n❌ Tidak ada spam teks aktif."
-
-if fw_tasks:
-    msg += "\n\n**Spam Forward:**"
-    for name in fw_tasks:
-        msg += f"\n • `{name}`"
-else:
-    msg += "\n\n❌ Tidak ada spam forward aktif."
-await event.edit(msg)
-
-View spamset/spamfw yang berjalan
-
-@ayiin_cmd(pattern="vwspam$") async def view_spam(event): teks = "• SPAM YANG SEDANG BERJALAN •\n"
-
-if aktif_spamset:
-    teks += "\n\n**Spamset (Teks):**"
-    for listname, data in aktif_spamset.items():
-        teks += f"\n• **List:** `{listname}`"
-        for chat_id in data.get("chats", []):
-            try:
-                chat = await event.client.get_entity(chat_id)
-                name = f"[{chat.title}](https://t.me/{chat.username})" if getattr(chat, "username", None) else f"`{chat.title}`"
-            except Exception:
-                name = f"`{chat_id}`"
-            teks += f"\n    - {name}"
-else:
-    teks += "\n\n**Spamset (Teks):** Tidak ada."
-
-if aktif_spamfw:
-    teks += "\n\n**Spamfw (Forward):**"
-    for listname, data in aktif_spamfw.items():
-        teks += f"\n• **List:** `{listname}`"
-        for chat_id in data.get("chats", []):
-            try:
-                chat = await event.client.get_entity(chat_id)
-                name = f"[{chat.title}](https://t.me/{chat.username})" if getattr(chat, "username", None) else f"`{chat.title}`"
-            except Exception:
-                name = f"`{chat_id}`"
-            teks += f"\n    - {name}"
-else:
-    teks += "\n\n**Spamfw (Forward):** Tidak ada."
-
-await event.edit(teks, link_preview=False)
-
-
-
+        except Exception as e:
+            added_groups.append(f"❌ Gagal menambahkan `{username}`: {str(e)}")
     
+    # Kirim balasan ke user dengan status
+    await event.reply("\n".join(added_groups))
+
+
+# Fungsi untuk menampilkan daftar target grup dan list yang disebar dengan username
+@ayiin_cmd(pattern="listset$")
+async def list_set(event):
+    if event.chat_id in BLACKLIST_CHAT:
+        return await event.edit("Dilarang di sini.")
+
+    # Ambil semua chat_id dari database untuk daftar target grup
+    cursor.execute("SELECT chat_id FROM spam_targets")
+    targets = cursor.fetchall()
+
+    if not targets:
+        await event.reply("❌ Tidak ada grup dalam daftar target spam.")
+        return
+
+    # Ambil username untuk setiap chat_id
+    target_usernames = []
+    for target in targets:
+        try:
+            group = await event.client.get_entity(target[0])
+            target_usernames.append(f"@{group.username}" if group.username else f"ID: {group.id}")
+        except Exception as e:
+            target_usernames.append(f"ID: {target[0]} (gagal ambil username)")
+
+    # Format username menjadi string yang bisa ditampilkan
+    target_usernames_str = "\n".join(target_usernames)
+
+    # Ambil list yang sudah disebar
+    cursor.execute("SELECT list_name FROM spam_lists")
+    spam_lists = cursor.fetchall()
+
+    if not spam_lists:
+        await event.reply(f"📝 Daftar grup dalam target spam:\n{target_usernames_str}\n\n❌ Belum ada list yang disebar.")
+        return
+
+    # Format list yang sudah disebar menjadi string
+    list_names = "\n".join([spam_list[0] for spam_list in spam_lists])
+
+    # Menampilkan daftar target grup dan list yang disebar
+    await event.reply(f"📝 Daftar grup dalam target spam:\n{target_usernames_str}\n\n📜 List yang telah disebar:\n{list_names}")
+
+# Fungsi untuk menghapus grup berdasarkan username atau chat_id
+@ayiin_cmd(pattern="delgc (@\w+|\-?\d+)$")
+async def del_gc(event):
+    if event.chat_id in BLACKLIST_CHAT:
+        return await event.edit("Dilarang di sini.")
+
+    # Ambil username atau chat_id
+    group_identifier = event.pattern_match.group(1)
+
+    # Cek apakah identifier yang diberikan berupa username atau chat_id
+    if group_identifier.startswith('@'):
+        username = group_identifier
+        try:
+            group = await event.client.get_entity(username)
+            chat_id = group.id
+        except Exception:
+            return await event.reply(f"❌ Gagal menemukan grup dengan username `{username}`.")
+    else:
+        chat_id = int(group_identifier)
+
+    # Cek apakah grup ada dalam daftar target spam
+    cursor.execute("SELECT chat_id FROM spam_targets WHERE chat_id = ?", (chat_id,))
+    existing = cursor.fetchone()
+
+    if not existing:
+        return await event.reply(f"❌ Grup dengan ID `{chat_id}` tidak ditemukan dalam daftar target.")
+
+    # Menghapus grup dari daftar target
+    cursor.execute("DELETE FROM spam_targets WHERE chat_id = ?", (chat_id,))
+    conn.commit()
+
+    await event.reply(f"✅ Grup dengan ID `{chat_id}` berhasil dihapus dari daftar target.")
+
+# Fungsi untuk spam forward menggunakan link langsung
+@ayiin_cmd(pattern="spamfw (\d+) (\S+)$")
+async def spamfw(event):
+    if event.chat_id in BLACKLIST_CHAT:
+        return await event.edit("Dilarang di sini.")
+
+    # Ambil delay dan link pesan channel yang diberikan
+    delay = event.pattern_match.group(1)
+    channel_message_link = event.pattern_match.group(2)
+
+    try:
+        sleeptimem = float(delay)  # Mengonversi delay menjadi angka float
+    except ValueError:
+        return await event.reply("❌ Format delay salah. Harus berupa angka.")
+
+    try:
+        # Ambil message_id dan channel_username dari link
+        message_id = int(channel_message_link.split('/')[-1])
+        channel_username = channel_message_link.split('/')[3]
+        channel = await event.client.get_entity(channel_username)
+        message = await event.client.get_messages(channel, ids=message_id)
+    except Exception as e:
+        return await event.reply(f"❌ Error: {str(e)}")
+
+    # Ambil semua grup yang terdaftar untuk spam forward
+    cursor.execute("SELECT chat_id FROM spamfw_targets")
+    targets = cursor.fetchall()
+
+    if not targets:
+        return await event.reply("❌ Tidak ada grup dalam daftar target spam forward.")
+
+    await event.delete()
+    SPAMFW_STATUS[event.chat_id] = True  # Menandakan spam sedang berjalan
+
+    # Lakukan forward spam ke setiap grup
+    for target in targets:
+        chat_id = target[0]
+        try:
+            await event.client.forward_messages(chat_id, message.id, channel)
+            await asyncio.sleep(sleeptimem)
+        except Exception as e:
+            await event.reply(f"❌ Gagal forward ke grup dengan ID `{chat_id}`: {str(e)}")
+
+    if BOTLOG_CHATID:
+        log_msg = "Spam forward selesai." if event.is_private else "Spam forward selesai di grup."
+        await event.client.send_message(
+            BOTLOG_CHATID, log_msg.format(event.chat_id)
+        )
+        
+# Fungsi untuk menghentikan forward spam pada grup (stoplist untuk spamfw)
+@ayiin_cmd(pattern="stoplistfw (@\w+|\-?\d+)$")
+async def stop_listfw(event):
+    if event.chat_id in BLACKLIST_CHAT:
+        return await event.edit("Dilarang di sini.")
+
+    # Ambil username atau chat_id
+    group_identifier = event.pattern_match.group(1)
+
+    # Cek apakah identifier yang diberikan berupa username atau chat_id
+    if group_identifier.startswith('@'):
+        username = group_identifier
+        try:
+            group = await event.client.get_entity(username)
+            chat_id = group.id
+        except Exception:
+            return await event.reply(f"❌ Gagal menemukan grup dengan username `{username}`.")
+    else:
+        chat_id = int(group_identifier)
+
+    # Cek apakah grup ada dalam daftar target spam forward
+    cursor.execute("SELECT chat_id FROM spamfw_targets WHERE chat_id = ?", (chat_id,))
+    existing = cursor.fetchone()
+
+    if not existing:
+        return await event.reply(f"❌ Grup dengan ID `{chat_id}` tidak ditemukan dalam daftar target spam forward.")
+
+    # Menghapus grup dari daftar target spam forward (stop list)
+    cursor.execute("DELETE FROM spamfw_targets WHERE chat_id = ?", (chat_id,))
+    conn.commit()
+
+    await event.reply(f"✅ Spam forward dihentikan di grup dengan ID `{chat_id}`. Grup ini telah dihapus dari daftar target.")
+
+
 CMD_HELP.update(
     {
         "spam": f"**Plugin :** `spam`\
