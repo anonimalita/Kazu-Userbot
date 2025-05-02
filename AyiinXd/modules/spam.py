@@ -602,7 +602,7 @@ async def list_all_data(event):
 
     await event.edit(msg)
 
-@man_cmd(pattern="vwspam$")
+@ayiin_cmd(pattern="vwspam$")
 async def view_spam(event):
     teks = "**• SPAM YANG SEDANG BERJALAN •**\n"
 
