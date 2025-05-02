@@ -384,7 +384,7 @@ async def list_fwspam(event):
     
 
 # Fitur untuk menambahkan grup baru ke target spam (dengan username)
-@ayiin_cmd(pattern="addgc (.+)", outgoing=True))
+@ayiin_cmd(pattern="addgc (.+)", outgoing=True)
 async def add_gc(event):
     if event.chat_id in BLACKLIST_CHAT:
         return await event.edit("Dilarang di sini.")
