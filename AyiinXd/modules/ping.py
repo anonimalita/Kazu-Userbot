@@ -55,7 +55,7 @@ async def _(ping):
     user = await ping.client.get_me()
     sleep(3)
     await ping.reply(
-        f"⎋ **Active!**"
+        f"⎋ **Active!**\n"
         f"├ **sᴘᴇᴇᴅʏ :** `%sms`\n"
         f"├ **ᴜᴘᴛɪᴍᴇ :** `{uptime}` \n"
         f"├ **ᴏᴡɴᴇʀ :** [{user.first_name}](tg://user?id={user.id})" % (duration)
