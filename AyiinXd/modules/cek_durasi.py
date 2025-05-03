@@ -6,7 +6,7 @@ from AyiinXd import CMD_HANDLER as cmd
 from AyiinXd import CMD_HELP, DB_URI
 from AyiinXd.ayiin import ayiin_cmd
 
-DURASI_UBOT = os.getenv("DURASI_UBOT", "30hari").lower()
+DURASI_UBOT = os.getenv("DURASI_UBOT").lower()
 DATABASE_URL = DB_URI
 
 # Konversi durasi ke detik
