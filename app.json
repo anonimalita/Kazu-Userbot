@@ -18,6 +18,10 @@
       "description": "Dapatkan String Session di @strgen_bot",
       "required": true
     },
+    "DURASI_UBOT": {
+      "description": "isi bebas pake angka & hari",
+      "required": true
+    },
     "HEROKU_APP_NAME": {
       "description": "Nama App heroku, Nama App yang paling pertama di isi (liat paling atas)",
       "required": true
