@@ -217,29 +217,61 @@ async def tmeme(event):
 
 SPAM_STATUS = {}
 
-@ayiin_cmd(pattern="(delayspam|dspam) ([\\s\\S]*)")
-async def dlyspam(event):
-    if event.chat_id in BLACKLIST_CHAT:
-        return await event.edit(get_string("ayiin_1"))
-    reply = await event.get_reply_message()
-    input_str = "".join(event.text.split(maxsplit=1)[1:]).split(" ", 2)
-    try:
-        sleeptimet = sleeptimem = float(input_str[0])
-    except Exception:
-        return await eod(
-            event, get_string("dspam_1").format(event.pattern_match.group(1))
-        )
-    xnxx = input_str[1:]
-    try:
-        int(xnxx[0])
-    except Exception:
-        return await eod(
-            event, get_string("dspam_1").format(event.pattern_match.group(1))
-        )
+@ayiin_cmd(pattern="(delayspam|dspam|dsspam) (\d+) (\d+)(?: (.+))?")
+async def delay_spam(event):
+    if event.chat_id in SPAM_STATUS and SPAM_STATUS[event.chat_id]:
+        return await event.edit("⚠️ Spam sedang berjalan di sini!")
 
-    await event.delete()
+    reply = await event.get_reply_message()
+    delay = int(event.pattern_match.group(2))
+    count = int(event.pattern_match.group(3))
+    extra_text = event.pattern_match.group(4)
+
+    media = reply.media if reply and reply.media else None
+
+    # ambil caption
+    if extra_text:
+        caption = extra_text
+    elif reply and reply.message:
+        caption = reply.message
+    else:
+        caption = None
+
+    if not media and not caption:
+        return await event.edit("❌ Tidak ada media atau teks yang bisa dikirim!")
+
+    await event.edit(f"▶️ Mulai spam {'media' if media else 'teks'} sebanyak {count}x, delay {delay}s")
+
     SPAM_STATUS[event.chat_id] = True
-    await delay_spam_function(event, reply, xnxx, sleeptimem, sleeptimet, chat_id=event.chat_id)
+
+    for i in range(count):
+        if not SPAM_STATUS.get(event.chat_id):
+            break
+        try:
+            if media:
+                await event.client.send_file(event.chat_id, media, caption=caption)
+            else:
+                await event.client.send_message(event.chat_id, caption)
+            await asyncio.sleep(delay)
+        except Exception as e:
+            print(f"❌ Gagal kirim spam: {e}")
+            break
+
+    SPAM_STATUS[event.chat_id] = False
+    await event.respond("✅ Spam selesai!")
+
+    try:
+        user = await event.client.get_entity(event.sender_id)
+        log_text = get_string("spam_4").format(
+            user.first_name,
+            user.id,
+            count,
+            delay
+        )
+        await event.client.send_message(BOTLOG_CHATID, log_text)
+    except Exception as e:
+        print(f"❌ Gagal kirim log: {e}")
+
 
 @ayiin_cmd(pattern="stopdspam(?:\\s+([\\s\\S]+))?")
 async def stop_dlyspam(event):
