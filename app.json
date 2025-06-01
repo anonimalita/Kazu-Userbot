@@ -15,7 +15,7 @@
       "required": true
     },
      "STRING_SESSION": {
-      "description": "Dapatkan String Session di @strgen_bot",
+      "description": "Dapatkan String Session di @Stringsesi_bot",
       "required": true
     },
     "DURASI_UBOT": {
