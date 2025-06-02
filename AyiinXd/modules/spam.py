@@ -221,26 +221,52 @@ SPAM_STATUS = {}
 async def dlyspam(event):
     if event.chat_id in BLACKLIST_CHAT:
         return await event.edit(get_string("ayiin_1"))
+
     reply = await event.get_reply_message()
     input_str = "".join(event.text.split(maxsplit=1)[1:]).split(" ", 2)
+
     try:
         sleeptimet = sleeptimem = float(input_str[0])
     except Exception:
         return await eod(
             event, get_string("dspam_1").format(event.pattern_match.group(1))
         )
-    xnxx = input_str[1:]
+
     try:
-        int(xnxx[0])
+        count = int(input_str[1])
     except Exception:
         return await eod(
             event, get_string("dspam_1").format(event.pattern_match.group(1))
         )
 
+    # Ambil teks tambahan kalau ada
+    text = input_str[2] if len(input_str) > 2 else None
+
     await event.delete()
     SPAM_STATUS[event.chat_id] = True
-    await delay_spam_function(event, reply, xnxx, sleeptimem, sleeptimet, chat_id=event.chat_id)
 
+    async def delay_spam_function(event, reply, count, text, sleeptimem, sleeptimet, chat_id=None):
+        from asyncio import sleep
+
+        for _ in range(count):
+            if SPAM_STATUS.get(chat_id) is False:
+                break
+
+            if reply and reply.media:
+                if reply.text:
+                    # Kalau media ada caption, spam media + caption sebanyak count
+                    await event.client.send_file(chat_id, reply.media, caption=reply.text)
+                else:
+                    # Kalau media tanpa caption, spam media + teks (kalau ada)
+                    await event.client.send_file(chat_id, reply.media, caption=text or "")
+            else:
+                if text:
+                    await event.client.send_message(chat_id, text)
+
+            await sleep(sleeptimet)
+
+    await delay_spam_function(event, reply, count, text, sleeptimem, sleeptimet, chat_id=event.chat_id)
+    
 @ayiin_cmd(pattern="stopdspam(?:\\s+([\\s\\S]+))?")
 async def stop_dlyspam(event):
     args = event.pattern_match.group(1)
