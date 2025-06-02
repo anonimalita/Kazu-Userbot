@@ -296,53 +296,47 @@ async def delay_spam_function(event, reply, xnxx, sleeptimem, sleeptimet, chat_i
 
 SPAMFW_STATUS = {}
 
-@ayiin_cmd(pattern="(delayspamfw|dspamfw) ([\\s\\S]*)")
-async def dlyspamfw(event):
+@ayiin_cmd(pattern="(delayspam|dspam) ([\\s\\S]*)")
+async def dlyspam(event):
     if event.chat_id in BLACKLIST_CHAT:
         return await event.edit(get_string("ayiin_1"))
 
+    reply = await event.get_reply_message()
     input_str = "".join(event.text.split(maxsplit=1)[1:]).split(" ", 2)
-    cmd = event.pattern_match.group(1)
 
     try:
         sleeptimet = sleeptimem = float(input_str[0])
     except Exception:
-        return await eod(event, get_string("dspam_1").format(cmd))
+        return await eod(
+            event, get_string("dspam_1").format(event.pattern_match.group(1))
+        )
 
     try:
-        counter = int(input_str[1])
+        count = int(input_str[1])
     except Exception:
-        return await eod(event, get_string("dspam_1").format(cmd))
+        return await eod(
+            event, get_string("dspam_1").format(event.pattern_match.group(1))
+        )
 
-    if len(input_str) < 3:
-        return await eod(event, f"⚠️ Format salah. Kirim: `{cmd} <delay> <jumlah> <link_post>`")
-
-    channel_message_link = input_str[2]
-
-    try:
-        message_id = int(channel_message_link.split('/')[-1])
-        channel_username = channel_message_link.split('/')[3]
-        channel = await event.client.get_entity(channel_username)
-        message = await event.client.get_messages(channel, ids=message_id)
-
-    except Exception as e:
-        return await eod(event, f"Error: {str(e)}")
+    text = input_str[2] if len(input_str) > 2 else None
 
     await event.delete()
-    SPAMFW_STATUS[event.chat_id] = True
+    SPAM_STATUS[event.chat_id] = True
 
-    for _ in range(counter):
-        if not SPAMFW_STATUS.get(event.chat_id, False):
-            break
-        await event.client.forward_messages(event.chat_id, message.id, channel)
-        await asyncio.sleep(sleeptimem)
+    async def delay_spam_function(event, reply, count, text, sleeptimem, sleeptimet, chat_id=None):
+        from asyncio import sleep
 
-    if BOTLOG_CHATID:
-        log_msg = get_string("dspamfw_1") if event.is_private else get_string("dspamfw_2")
-        context = event.chat_id if event.is_private else get_display_name(await event.get_chat())
-        await event.client.send_message(
-            BOTLOG_CHATID, log_msg.format(context, event.chat_id, counter, message.text)
-        )
+        for _ in range(count):
+            if SPAM_STATUS.get(chat_id) is False:
+                break
+
+            if reply and reply.media:
+                await event.client.send_file(chat_id, reply.media, caption=reply.text or text or "")
+            elif text:
+                await event.client.send_message(chat_id, text)
+            await sleep(sleeptimet)
+
+    await delay_spam_function(event, reply, count, text, sleeptimem, sleeptimet, chat_id=event.chat_id)
 
 
 @ayiin_cmd(pattern="stopfw(?:\\s+([\\s\\S]+))?")
