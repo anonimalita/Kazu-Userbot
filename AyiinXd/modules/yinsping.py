@@ -60,7 +60,7 @@ async def _(ping):
     end = datetime.now()
     duration = (end - start).microseconds / 1000
     user = await ping.client.get_me()
-    message = "**♘ 𝗜𝗫𝗔𝗟𝗟-Userbot**\n\n├ 私 **ᴘɪɴɢᴇʀ :** `{} ms`\n├ さ  **ᴜᴘᴛɪᴍᴇ :** `{}`\n├ ふ **ᴏᴡɴᴇʀ :** `{}`\n├ 尔 **ɪᴅ :** `{}`"
+    message = "**♘ 𝗜𝗫𝗔𝗟𝗟-Userbot**\n\n├ 私 **ᴘɪɴɢᴇʀ :** `{} ms`\n├ さ **ᴜᴘᴛɪᴍᴇ :** `{}`\n├ ふ **ᴏᴡɴᴇʀ :** `{}`\n├ 尔 **ɪᴅ :** `{}`"
     await ping.reply(message.format(duration, uptime, user.first_name, user.id)
                      )
 
