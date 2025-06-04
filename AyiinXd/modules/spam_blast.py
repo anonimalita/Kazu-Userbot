@@ -16,9 +16,13 @@ async def setgrup(event):
     grups = [x for x in raw.split() if x.startswith("@")] 
     if not grups:
         return await event.edit("❌ Harus pakai @username grup!")
-    spam_sql.add_groups_to_list(nama, grups)
-    await event.edit(f"✅ berhasil ditambahin ke list `{nama}`: {len(grups)} grup.")
 
+    # ✅ Cek apakah list-nya sudah ada, kalau belum bikin default
+    if not spam_sql.get_list(nama):
+        spam_sql.add_list(nama, "biasa", "", 10)  # bikin default list
+
+    spam_sql.add_groups_to_list(nama, grups)
+    await event.edit(f"✅ berhasil ditambahkan ke list `{nama}`: {len(grups)} grup.")
 
 active_spams = {}
 
@@ -27,6 +31,8 @@ async def onspamloop(event):
     delay = int(event.pattern_match.group(1))
     nama = event.pattern_match.group(2).strip()
     teks = event.pattern_match.group(3).strip()
+
+    spam_sql.update_list(nama, "spam", delay, teks)
 
     if nama in active_spams:
         return await event.edit(f"🚫 spam `{nama}` sudah berjalan!")
@@ -42,15 +48,14 @@ async def onspamloop(event):
     async def spam_loop():
         try:
             while True:
+                tasks = []
                 for g in grups:
-                    try:
-                        if media:
-                            await event.client.send_file(g, media, caption=teks or None)
-                        else:
-                            await event.client.send_message(g, teks)
-                    except Exception as e:
-                        print(f"[SPAM] Gagal ke {g}: {e}")
-                    await asyncio.sleep(delay)
+                    if media:
+                        tasks.append(event.client.send_file(g, media, caption=teks or None))
+                    else:
+                        tasks.append(event.client.send_message(g, teks))
+                await asyncio.gather(*tasks)
+                await asyncio.sleep(delay)
         except asyncio.CancelledError:
             print(f"[SPAM] Loop spam `{nama}` dihentikan.")
 
@@ -63,6 +68,8 @@ async def onfwloop(event):
     nama = event.pattern_match.group(2).strip()
     link = event.pattern_match.group(3).strip()
 
+    spam_sql.update_list(nama, "forward", delay, link)
+    
     if nama in active_spams:
         return await event.edit(f"🚫 spam forward `{nama}` sudah berjalan!")
 
@@ -76,7 +83,6 @@ async def onfwloop(event):
 
     chat_part = match.group(2)
     msg_id = int(match.group(3))
-
     chat_id = int("-100" + chat_part) if match.group(1) == "c/" else (int(chat_part) if chat_part.isdigit() else chat_part)
     msg = await event.client.get_messages(chat_id, ids=msg_id)
 
@@ -85,12 +91,9 @@ async def onfwloop(event):
     async def forward_loop():
         try:
             while True:
-                for g in grups:
-                    try:
-                        await event.client.forward_messages(g, msg)
-                    except Exception as e:
-                        print(f"[FW] Gagal ke {g}: {e}")
-                    await asyncio.sleep(delay)
+                tasks = [event.client.forward_messages(g, msg) for g in grups]
+                await asyncio.gather(*tasks)
+                await asyncio.sleep(delay)
         except asyncio.CancelledError:
             print(f"[FW] Loop spam `{nama}` dihentikan.")
 
@@ -198,4 +201,4 @@ CMD_HELP.update(
         \n    - Bisa spam media (reply dulu pesan yang ingin disebar)\
         \n    - Gunakan dengan bijak, spam berlebihan bisa dibanned telegram!"
     }
-)
+    )
