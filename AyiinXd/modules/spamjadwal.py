@@ -95,17 +95,13 @@ async def rlist(event):
     await event.reply(f"Nama list {namalist} dan grupnya berhasil dihapus.")
 
 # Command spam teks ke grup dengan jadwal berhenti dan delay
-@ayiin_cmd(pattern=f"unspam(?:\\s+)(.*)")
+@ayiin_cmd(pattern=r"unspam\s+(\d{1,2}:\d{2})\s+(\d+)\s+(\S+)\s*([\s\S]*)")
 async def unspam(event):
-    args = event.pattern_match.group(1).split(" ", 3)
-    if len(args) < 3:
-        return await event.reply(
-            f"Format salah!\nGunakan:\n`{cmd}unspam <jam_berhenti> <delay> <namalist> [teks spam (optional jika reply media)]`"
-        )
-
-    jam_henti, delay, namalist = args[0], args[1], args[2]
-    teks = args[3] if len(args) > 3 else None
-
+    jam_henti = event.pattern_match.group(1)
+    delay = event.pattern_match.group(2)
+    namalist = event.pattern_match.group(3)
+    teks = event.pattern_match.group(4).strip() or None
+    
     zona_input = get_user_timezone(str(event.sender_id)) or "WIB"
     tz = pytz.timezone(zona_map.get(zona_input, "Asia/Jakarta"))
 
