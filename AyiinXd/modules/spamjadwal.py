@@ -33,7 +33,7 @@ ACTIVE_SPAM = {}
 async def set_zona(event):
     zona_input = event.pattern_match.group(1).strip().upper()
     if zona_input not in zona_map:
-        return await event.reply("Zona gak valid. Pilih salah satu: WIB, WITA, WIT.")
+        return await event.reply("Zona yang kamu pilih tidak valid. Pilih salah satu: WIB, WITA, WIT.")
     set_user_timezone(str(event.sender_id), zona_input)
     await event.reply(f"Zona waktu berhasil di-set ke {zona_input}.")
 
@@ -132,11 +132,11 @@ async def unspam(event):
             if now >= jam_stop:
                 if BOTLOG_CHATID:
                     log_msg = (
-                        f"📛 **SPAM SELESAI**\n\n"
-                        f"📂 Nama List : `{namalist}`\n"
-                        f"⏰ Waktu Berhenti : `{jam_henti} ({zona_input})`\n"
-                        f"📊 Total Pesan : `{counter}`\n"
-                        f"📎 Mode : {'Media + Caption' if reply_msg else 'Teks'}"
+                        f"女 **SPAM SELESAI**\n\n"
+                        f"な Nama List : `{namalist}`\n"
+                        f"ネ Waktu Berhenti : `{jam_henti} ({zona_input})`\n"
+                        f"ム Total Pesan : `{counter}`\n"
+                        f"ミ Mode : {'Media + Caption' if reply_msg else 'Teks'}"
                     )
                     if teks:
                         log_msg += f"\n🧠 Teks :\n{teks}"
@@ -212,11 +212,11 @@ async def unfw(event):
             if now >= jam_stop:
                 if BOTLOG_CHATID:
                     log_msg = (
-                        f"📛 **SPAM FORWARD SELESAI**\n\n"
-                        f"📂 Nama List : `{namalist}`\n"
-                        f"⏰ Waktu Berhenti : `{jam_henti} ({zona_input})`\n"
-                        f"📊 Total Pesan Ter-forward : `{counter}`\n"
-                        f"🔗 Link : {link}"
+                        f"女 **SPAM FORWARD SELESAI**\n\n"
+                        f"ネ Nama List : `{namalist}`\n"
+                        f"な Waktu Berhenti : `{jam_henti} ({zona_input})`\n"
+                        f"ム Total Pesan : `{counter}`\n"
+                        f"ミ Link : {link}"
                     )
                     await event.client.send_message(BOTLOG_CHATID, log_msg)
                 break
