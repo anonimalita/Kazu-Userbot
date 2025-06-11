@@ -601,32 +601,6 @@ CMD_HELP.update(
 \n  »  **Kegunaan :** Menghentikan spam forward di grup saat ini.\
 \n\n  »  **Perintah :** `{cmd}listfw`\
 \n  »  **Kegunaan :** Menampilkan semua spam forward yang sedang aktif.\
-\n\n  »  **Perintah :** `{cmd}vspam` <jumlah> <teks>\
-\n  »  **Kegunaan :** Spam teks biasa sebanyak jumlah yang ditentukan.\
-\n\n  »  **Perintah :** `{cmd}setlist` <nama_list> <teks>\
-\n  »  **Kegunaan :** Menyimpan teks spam (hyperlink atau teks kebawah) ke dalam list.\
-\n\n  »  **Perintah :** `{cmd}dellist` <nama_list> <isi>\
-\n  »  **Kegunaan :** Menghapus isi tertentu dari list spam.\
-\n\n  »  **Perintah :** `{cmd}setlistfw` <nama_list> <link_post_channel>\
-\n  »  **Kegunaan :** Menyimpan list spam forward berdasarkan post dari channel.\
-\n\n  »  **Perintah :** `{cmd}dellistfw` <nama_list>\
-\n  »  **Kegunaan :** Menghapus list forward berdasarkan nama list.\
-\n\n  »  **Perintah :** `{cmd}setgc` <nama_list> <@usergc/ID>\
-\n  »  **Kegunaan :** Menambahkan grup ke list tujuan spam.\
-\n\n  »  **Perintah :** `{cmd}delgc` <nama_list> <@usergc/ID>\
-\n  »  **Kegunaan :** Menghapus grup dari list tujuan spam.\
-\n\n  »  **Perintah :** `{cmd}spamset` <delay> <nama_list>\
-\n  »  **Kegunaan :** Menyebar isi list teks ke grup-grup yang sudah diset.\
-\n\n  »  **Perintah :** `{cmd}spamfw` <delay> <nama_list>\
-\n  »  **Kegunaan :** Menyebar post channel dari list forward ke grup-grup yang diset.\
-\n\n  »  **Perintah :** `{cmd}stopset`\
-\n  »  **Kegunaan :** Menghentikan proses spamset yang sedang berjalan.\
-\n\n  »  **Perintah :** `{cmd}sstopfw`\
-\n  »  **Kegunaan :** Menghentikan proses spamfw yang sedang berjalan.\
-\n\n  »  **Perintah :** `{cmd}spamcek`\
-\n  »  **Kegunaan :** Menampilkan semua list teks, list forward, dan list grup yang tersimpan.\
-\n\n  »  **Perintah :** `{cmd}vwspam`\
-\n  »  **Kegunaan :** Melihat semua spamset/spamfw yang aktif dan sedang berjalan.\
 \n\n  •  **NOTE :** Spam dengan Risiko Anda sendiri. Jangan salah gunakan!"
     }
 )
