@@ -267,6 +267,27 @@ async def dlyspam(event):
 
     await delay_spam_function(event, reply, count, text, sleeptimem, sleeptimet, chat_id=event.chat_id)
     
+    if BOTLOG_CHATID:
+        try:
+            chat = await event.get_chat()
+            name = get_display_name(chat)
+        except Exception:
+            name = "Tidak diketahui"
+
+        if event.is_private:
+            await event.client.send_message(
+                BOTLOG_CHATID,
+                get_string("spam_7").format(event.chat_id, count, text or (reply.text if reply else "Tidak ada teks"))
+            )
+        else:
+            await event.client.send_message(
+                BOTLOG_CHATID,
+                get_string("spam_8").format(
+                    name, event.chat_id, count, text or (reply.text if reply else "Tidak ada teks")
+                )
+            )
+            
+
 @ayiin_cmd(pattern="stopdspam(?:\\s+([\\s\\S]+))?")
 async def stop_dlyspam(event):
     args = event.pattern_match.group(1)
@@ -295,12 +316,20 @@ async def stop_dlyspam(event):
 async def list_dspam(event):
     if not SPAM_STATUS:
         return await event.edit("✅ Tidak ada delay spam yang aktif.")
-    active_chats = [str(cid) for cid, status in SPAM_STATUS.items() if status]
+
+    active_chats = [cid for cid, status in SPAM_STATUS.items() if status]
     if not active_chats:
         return await event.edit("✅ Tidak ada delay spam yang aktif.")
+
     text = "**📋 List Delay Spam Aktif:**\n"
     for cid in active_chats:
-        text += f"• `{cid}`\n"
+        try:
+            entity = await event.client.get_entity(int(cid))
+            name = entity.title
+        except Exception:
+            name = "Tidak diketahui"
+        text += f"• `{cid}` [{name}]\n"
+
     await event.edit(text)
 
 async def delay_spam_function(event, reply, xnxx, sleeptimem, sleeptimet, chat_id):
@@ -397,12 +426,20 @@ async def stop_fwspam(event):
 async def list_fwspam(event):
     if not SPAMFW_STATUS:
         return await event.edit("✅ Tidak ada forward spam yang aktif.")
-    active_chats = [str(cid) for cid, status in SPAMFW_STATUS.items() if status]
+
+    active_chats = [cid for cid, status in SPAMFW_STATUS.items() if status]
     if not active_chats:
         return await event.edit("✅ Tidak ada forward spam yang aktif.")
+
     text = "**📋 List Forward Spam Aktif:**\n"
     for cid in active_chats:
-        text += f"• `{cid}`\n"
+        try:
+            entity = await event.client.get_entity(int(cid))
+            name = entity.title
+        except Exception:
+            name = "Tidak diketahui"
+        text += f"• `{cid}` [{name}]\n"
+
     await event.edit(text)
     
 
