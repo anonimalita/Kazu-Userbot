@@ -9,7 +9,7 @@ from telethon.tl.types import InputPeerChannel, InputMessageID
 import re
 import asyncio
 
-@ayiin_cmd(pattern=r"setgrup (.+?)\s*\|\s*(.+)")
+@ayiin_cmd(pattern=r"setgrup (\S+)\s+(.+)")
 async def setgrup(event):
     nama = event.pattern_match.group(1).strip()
     raw = event.pattern_match.group(2).strip()
@@ -26,7 +26,7 @@ async def setgrup(event):
 
 active_spams = {}
 
-@ayiin_cmd(pattern=r"onspam (\d+)\|(.+?)\|([\s\S]*)")
+@ayiin_cmd(pattern=r"onspam (\d+)\s+(\S+)\s+([\s\S]+)")
 async def onspamloop(event):
     delay = int(event.pattern_match.group(1))
     nama = event.pattern_match.group(2).strip()
@@ -62,7 +62,7 @@ async def onspamloop(event):
     task = asyncio.create_task(spam_loop())
     active_spams[nama] = task
 
-@ayiin_cmd(pattern=r"onfw (\d+)\|(.+?)\|(https?://t\.me/[^\s]+)")
+@ayiin_cmd(pattern=r"onfw (\d+)\s+(.+?)\s+(https?://t\.me/[^\s]+)")
 async def onfwloop(event):
     delay = int(event.pattern_match.group(1))
     nama = event.pattern_match.group(2).strip()
@@ -136,7 +136,7 @@ async def list_save(event):
     teks += f"• Jenis : `{data.type}`\n"
     teks += f"• Delay : `{data.delay}` detik\n"
     teks += f"• Grup : {len(grups)}\n"
-    teks += f"• Teks/Link:\n`{data.content}`\n"
+    teks += f"• List Sebar:\n{data.content}\n"
     teks += "\n📌 **Daftar Grup:**\n"
     for g in grups:
         teks += f" - `{g}`\n"
@@ -177,16 +177,16 @@ async def show_all_spam_lists(event):
 CMD_HELP.update(
     {
         "spamloop": f"**Plugin : **`spamloop`\
-        \n\n  »  **Perintah :** `{cmd}onspam <delay>|<namalist>|<teks>`\
+        \n\n  »  **Perintah :** `{cmd}onspam <delay> <namalist> <teks>`\
         \n  »  **Kegunaan :** Spam teks ke semua grup di list. Bisa reply media juga.\
-        \n\n  »  **Perintah :** `{cmd}onfw <delay>|<namalist>|<link channel>`\
+        \n\n  »  **Perintah :** `{cmd}onfw <delay> <namalist> <link channel>`\
         \n  »  **Kegunaan :** Spam forward pesan dari channel ke semua grup di list.\
         \n\n  »  **Perintah :** `{cmd}stopspam <namalist>`\
         \n  »  **Kegunaan :** Memberhentikan spam yang sedang berjalan di list tersebut.\
-        \n\n  »  **Perintah :** `{cmd}setgrup <namalist>|<@usergrup1> <@usergrup2>`\
+        \n\n  »  **Perintah :** `{cmd}setgrup <namalist> <@usergrup1> <@usergrup2>`\
         \n  »  **Kegunaan :** Menyimpan banyak grup ke dalam satu list.\
-        \n\n  »  **Perintah :** `{cmd}listgrup <namalist>`\
-        \n  »  **Kegunaan :** Menampilkan semua grup yang tersimpan dalam nama list.\
+        \n\n  »  **Perintah :** `{cmd}listspam`\
+        \n  »  **Kegunaan :** Menampilkan semua list spam yang sedang berjalan.\
         \n\n  »  **Perintah :** `{cmd}listsave <namalist>`\
         \n  »  **Kegunaan :** Menampilkan detail isi list (grup & teks sebar).\
         \n\n  »  **Perintah :** `{cmd}slist`\
