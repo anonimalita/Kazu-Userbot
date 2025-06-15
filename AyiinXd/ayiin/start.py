@@ -8,6 +8,8 @@ from AyiinXd import (
     blacklistayiin,
     bot,
     tgbot,
+    BOTLOG_CHATID,
+    BOTLOG,
 )
 
 async def startupmessage():
