@@ -25,31 +25,31 @@ from .ping import get_readable_time
 
 
 absen = [
-    "**𝙃𝙖𝙙𝙞𝙧 𝙙𝙤𝙣𝙜 𝙏𝙤𝙙** 😁",
-    "**𝙃𝙖𝙙𝙞𝙧 𝙆𝙖𝙠𝙖 𝙂𝙖𝙣𝙩𝙚𝙣𝙜** 😉",
-    "**𝙂𝙪𝙖 𝙃𝙖𝙙𝙞𝙧 𝘾𝙤𝙣𝙩𝙤𝙡** 😁",
-    "**𝙂𝙪𝙖 𝙃𝙖𝙙𝙞𝙧 𝙂𝙖𝙣𝙩𝙚𝙣𝙜** 🥵",
-    "**𝙃𝙖𝙙𝙞𝙧 𝙉𝙜𝙖𝙗** 😎",
-    "**𝙂𝙪𝙖 𝙃𝙖𝙙𝙞𝙧 𝘼𝙗𝙖𝙣𝙜** 🥺",
-    "**𝙎𝙞 𝘾𝙖𝙠𝙚𝙥 𝙃𝙖𝙙𝙞𝙧 𝘽𝙖𝙣𝙜** 😎",
-    "**Hadir kak maap telat** 🥺",
-    "**Hadir Tuan** 🙏🏻",
-    "**Hadir Majikan** 🙏🏻",
-    "**Hadir Sayang** 😳",
-    "**Hadir Bro ixall** 😁",
-    "**Maaf ka habis nemenin ka ixall** 🥺",
-    "**Maaf ka habis disuruh Tuan ixall** 🥺🙏🏻",
-    "**Hadir ixall Sayang** 😘",
-    "**Hadir ixall Akuuuuhhh** ☺️",
-    "**Hadir ixall brother Aku** 🥰",
+    "**hadir xall**",
+    "**hadir bang**",
+    "**hadir ni**",
+    "**gua disini coii**",
+    "**hadir boss**",
+    "**apa xall?**",
+    "**oit gua disini**",
+    "**hadir lah**",
+    "**hadir paduka ixall**",
+    "**apa xall? gua lagi ngewe**",
+    "**apa xall? gua lagi coli**",
+    "**apa kontol**",
+    "**hadir anjing, berisik**",
+    "**sorry, kenapa ngentot?**",
+    "**kenapa sayang**",
+    "**ah ah ngewe**",
+    "**apa**",
 ]
 
 ixallkece = [
-    "**𝙄𝙮𝙖 ixall 𝙂𝙖𝙣𝙩𝙚𝙣𝙜 𝘽𝙖𝙣𝙜𝙚𝙩** 😍",
-    "**𝙂𝙖𝙣𝙩𝙚𝙣𝙜𝙣𝙮𝙖 𝙂𝙖𝙠 𝘼𝙙𝙖 𝙇𝙖𝙬𝙖𝙣** 😚",
-    "**𝙆𝙖𝙢𝙪 𝙂𝙖𝙣𝙩𝙚𝙣𝙜𝙣𝙮𝙖 𝘼𝙠𝙪 𝙆𝙖𝙣 xall** 😍",
-    "**𝙄𝙮𝙖𝙖 𝙜𝙖𝙙𝙖 𝙖𝙙𝙖 𝙨𝙖𝙞𝙣𝙜** 😎",
-    "**𝙆𝙖𝙢𝙪 𝙅𝙖𝙢𝙚𝙩 𝙏𝙖𝙥𝙞 𝘽𝙤𝙤𝙣𝙜** 😚",
+    "**muka lu kek kontol**",
+    "**buset jungkok juga malah gantengnya bang**",
+    "**iya ganteng sayang**",
+    "**ganteng ih jadi pengen gua ewe**",
+    "**berisik jelek**",
 ]
 
 
@@ -75,11 +75,11 @@ async def _(ping):
 async def kazuabsen(ganteng):
     await ganteng.reply(choice(absen))
 
-@register(incoming=True, from_users=DEVS, pattern=r"^Naya$")
+@register(incoming=True, from_users=DEVS, pattern=r"^Kela$")
 async def naya(naya):
     await naya.reply("**kela Punya ixall**🤩")
 
-@register(incoming=True, from_users=DEVS, pattern=r"^Aku ganteng kan$")
+@register(incoming=True, from_users=DEVS, pattern=r"^Gua ganteng kan$")
 async def kazu(ganteng):
     await ganteng.reply(choice(ixallkece))
 
