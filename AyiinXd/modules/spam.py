@@ -217,7 +217,7 @@ async def tmeme(event):
 
 SPAM_STATUS = {}
 
-@ayiin_cmd(pattern="(delayspam|dspam) ([\\s\\S]*)")
+@ayiin_cmd(pattern="(delayspam|dspam|dlspam|spamd) ([\\s\\S]*)")
 async def dlyspam(event):
     if event.chat_id in BLACKLIST_CHAT:
         return await event.edit(get_string("ayiin_1"))
@@ -351,7 +351,7 @@ async def delay_spam_function(event, reply, xnxx, sleeptimem, sleeptimet, chat_i
 
 SPAMFW_STATUS = {}
 
-@ayiin_cmd(pattern="(delayspamfw|dspamfw) ([\s\S]*)")
+@ayiin_cmd(pattern="(delayspamfw|dspamfw|dlspamfw|dlyspamfw) ([\s\S]*)")
 async def dlyspamfw(event):
     if event.chat_id in BLACKLIST_CHAT:
         return await event.edit(get_string("ayiin_1"))
