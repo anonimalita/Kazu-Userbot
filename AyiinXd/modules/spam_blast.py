@@ -91,11 +91,9 @@ async def onfwloop(event):
     async def forward_loop():
         try:
             while True:
-                for g in grups:
-                    try:
-                        tasks = [event.client.forward_messages(g, msg) for g in grups]  
-                        await asyncio.gather(*tasks)  
-                        await asyncio.sleep(delay)  
+                tasks = [event.client.forward_messages(g, msg) for g in grups]
+                await asyncio.gather(*tasks)
+                await asyncio.sleep(delay_siklus)
         except asyncio.CancelledError:
             print(f"[FW] Loop spam `{nama}` dihentikan.")
 
