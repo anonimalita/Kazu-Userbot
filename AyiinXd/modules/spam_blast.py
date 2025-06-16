@@ -93,11 +93,9 @@ async def onfwloop(event):
             while True:
                 for g in grups:
                     try:
-                        await event.client.forward_messages(g, msg)
-                        await asyncio.sleep(1.5)  # delay antar grup biar ga flood
-                    except FloodWaitError as e:
-                        print(f"FloodWait {e.seconds} detik untuk grup {g}")
-                        await asyncio.sleep(e.seconds + 5)
+                        tasks = [event.client.forward_messages(g, msg) for g in grups]  
+                        await asyncio.gather(*tasks)  
+                        await asyncio.sleep(delay)  
         except asyncio.CancelledError:
             print(f"[FW] Loop spam `{nama}` dihentikan.")
 
