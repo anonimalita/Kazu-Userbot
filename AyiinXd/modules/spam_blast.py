@@ -89,17 +89,17 @@ async def onfwloop(event):
     await event.edit(f"▶️ Memulai forward spam `{nama}`...")
 
     async def forward_loop():
-    try:
-        while True:
-            try:
-                tasks = [event.client.forward_messages(g, msg) for g in grups]
-                await asyncio.gather(*tasks, return_exceptions=True)
-            except Exception as e:
-                print(f"[FW] Gagal kirim: {e}")
-            await asyncio.sleep(delay)
-    except asyncio.CancelledError:
-        print(f"[FW] Loop spam `{nama}` dihentikan.")
-
+        try:
+            while True:
+                try:
+                    tasks = [event.client.forward_messages(g, msg) for g in grups]
+                    await asyncio.gather(*tasks, return_exceptions=True)
+                except Exception as e:
+                    print(f"[FW] Gagal kirim: {e}")
+                await asyncio.sleep(delay)
+        except asyncio.CancelledError:
+            print(f"[FW] Loop spam `{nama}` dihentikan.")
+        
     task = asyncio.create_task(forward_loop())
     active_spams[nama] = task
 
