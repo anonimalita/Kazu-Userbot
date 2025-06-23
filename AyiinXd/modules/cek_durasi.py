@@ -6,9 +6,6 @@ from AyiinXd import CMD_HANDLER as cmd
 from AyiinXd import CMD_HELP, DB_URI
 from AyiinXd.ayiin import ayiin_cmd
 
-DURASI_UBOT = os.getenv("DURASI_UBOT").lower()
-DATABASE_URL = DB_URI
-
 # Konversi durasi ke detik
 def konversi_ke_detik(durasi: str) -> int:
     if durasi == "lifetime":
@@ -33,23 +30,12 @@ def konversi_ke_detik(durasi: str) -> int:
 @ayiin_cmd(pattern="cekdurasi$")
 async def _(event):
     try:
-        conn = await asyncpg.connect(DATABASE_URL)
-        await conn.execute("""
-            CREATE TABLE IF NOT EXISTS bot_info (
-                id INTEGER PRIMARY KEY,
-                start_time BIGINT,
-                jenis TEXT
-            );
-        """)
+        conn = await asyncpg.connect(DB_URI)
         row = await conn.fetchrow("SELECT start_time, jenis FROM bot_info WHERE id=1")
         now = int(time.time())
 
         if not row:
-            await conn.execute("""
-                INSERT INTO bot_info (id, start_time, jenis)
-                VALUES (1, $1, $2)
-            """, now, DURASI_UBOT)
-            await event.edit(f"**Tabel database dibuat dan durasi otomatis di-set ke** `{DURASI_UBOT}`")
+            await event.edit("**Durasi belum disetel. Silakan hubungi admin.**")
             await conn.close()
             return
 
@@ -74,11 +60,11 @@ async def _(event):
                 seconds = sisa % 60
 
                 await event.edit(
-    f"**Informasi Userbot kamu:**\n"
-    f"**Durasi:** `{jenis}`\n"
-    f"**Sisa Durasi:** `{days} hari, {hours} jam, {minutes} menit, {seconds} detik`\n"
-    f"**Habis Tanggal:** `{habis_tanggal}`"
-    )
+                    f"**Informasi Userbot kamu:**\n"
+                    f"**Durasi:** `{jenis}`\n"
+                    f"**Sisa Durasi:** `{days} hari, {hours} jam, {minutes} menit, {seconds} detik`\n"
+                    f"**Habis Tanggal:** `{habis_tanggal}`"
+                )
         await conn.close()
     except Exception as e:
         await event.edit(f"**Terjadi kesalahan:**\n`{str(e)}`")
