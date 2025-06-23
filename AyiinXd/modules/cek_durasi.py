@@ -6,10 +6,10 @@ from AyiinXd import CMD_HANDLER as cmd
 from AyiinXd import CMD_HELP, DB_URI
 from AyiinXd.ayiin import ayiin_cmd
 
-# Konversi durasi ke detik
+# Fungsi konversi durasi ke detik
 def konversi_ke_detik(durasi: str) -> int:
     if durasi == "lifetime":
-        return -1  # penanda lifetime
+        return -1
     jumlah = ''.join(filter(str.isdigit, durasi))
     satuan = ''.join(filter(str.isalpha, durasi))
 
@@ -31,6 +31,16 @@ def konversi_ke_detik(durasi: str) -> int:
 async def _(event):
     try:
         conn = await asyncpg.connect(DB_URI)
+
+        # Buat tabel jika belum ada
+        await conn.execute("""
+            CREATE TABLE IF NOT EXISTS bot_info (
+                id INTEGER PRIMARY KEY,
+                start_time BIGINT,
+                jenis TEXT
+            );
+        """)
+
         row = await conn.fetchrow("SELECT start_time, jenis FROM bot_info WHERE id=1")
         now = int(time.time())
 
@@ -72,6 +82,6 @@ async def _(event):
 CMD_HELP.update({
     "cek_durasi": f"**Plugin :** `cek_durasi`\
     \n\n  »  **Perintah :** `{cmd}cekdurasi`\
-    \n  »  **Fungsi :** Untuk mengecek durasi userbot.\
+    \n  »  **Fungsi :** Untuk mengecek durasi aktif userbot.\
 "
 })
