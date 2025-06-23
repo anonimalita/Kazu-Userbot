@@ -23,7 +23,7 @@ from AyiinXd.ayiin import AyiinDB, HOSTED_ON, autobot, autopilot, ayiin_version
 # ⏱️ Fungsi untuk inisialisasi durasi pertama kali
 async def init_bot_durasi():
     try:
-        DATABASE_URL = os.getenv("DB_URI")
+        DATABASE_URL = os.getenv("DATABASE_URL")
         DURASI_UBOT = os.getenv("DURASI_UBOT").lower()
         conn = await asyncpg.connect(DATABASE_URL)
         await conn.execute("""
