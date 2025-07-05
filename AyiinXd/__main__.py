@@ -47,7 +47,7 @@ async def init_bot_durasi():
 # ⛔ Matikan userbot jika durasi habis
 async def cek_auto_expired():
     try:
-        DATABASE_URL = os.getenv("DB_URI")
+        DATABASE_URL = os.getenv("DATABASE_URL")
         conn = await asyncpg.connect(DATABASE_URL)
         await conn.execute("""
             CREATE TABLE IF NOT EXISTS bot_info (
