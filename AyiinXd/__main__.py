@@ -108,7 +108,7 @@ try:
     LOGS.info(f"Userbot Version - {ubotversion} •[{adB.name}]•")
     LOGS.info(f"IXALL Version - {ayiin_version} •[{HOSTED_ON}]•")
     LOGS.info("[🔥 USERBOT BERHASIL DIAKTIFKAN 🔥]")
-except (ConnectionError, KeyboardInterrupt, NotImplementedError, SystemExit):
+except (ConnectionError, KeyboardInterrupt, NotImplementedError):
     pass
 except BaseException as e:
     LOGS.info(str(e), exc_info=True)
