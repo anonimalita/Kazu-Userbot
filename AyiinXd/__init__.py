@@ -75,14 +75,6 @@ if version_info[0] < 3 or version_info[1] < 8:
     )
     sys.exit(1)
 
-if CONFIG_CHECK := os.environ.get(
-    "___________PLOX_______REMOVE_____THIS_____LINE__________", None
-):
-    LOGS.info(
-        "Harap hapus baris yang disebutkan dalam tagar pertama dari file config.env"
-    )
-    sys.exit(1)
-
 while 0 < 6:
     _DEVS = get(
         "https://raw.githubusercontent.com/ixally/deps/main/DEVS.json"
